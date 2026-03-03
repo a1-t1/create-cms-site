@@ -125,6 +125,10 @@ function handleClick(event: MouseEvent) {
   const blockEl = fieldEl.closest("[data-cms-block]");
   if (!blockEl) return;
 
+  // Prevent navigation when clicking links inside CMS fields
+  event.preventDefault();
+  event.stopPropagation();
+
   const fieldName = fieldEl.getAttribute("data-cms-field");
   const blockTag = blockEl.getAttribute("data-cms-block");
   if (!fieldName || !blockTag) return;

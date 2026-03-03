@@ -218,7 +218,7 @@ Tags is an array: \`block.tags.includes("hero")\`, NOT \`block.tag.split(",").in
 When creating a preview listener component, it MUST:
 1. Check \`msg.type === "cms-preview-update"\` before processing (other postMessages exist)
 2. Handle \`cms-preview-highlight\` messages for field focus/blur visual feedback
-3. Handle click-to-edit: when inside an iframe, delegate clicks on \`[data-cms-field]\` elements and send \`cms-preview-element-click\` messages to \`window.parent\` with \`{ blockTag, fieldName }\`
+3. Handle click-to-edit: when inside an iframe, delegate clicks on \`[data-cms-field]\` elements, call \`preventDefault()\` + \`stopPropagation()\` to block link navigation, and send \`cms-preview-element-click\` messages to \`window.parent\` with \`{ blockTag, fieldName }\`
 4. Add hover styles (\`outline: 1px dashed\`) on \`[data-cms-field]\` elements — only when inside an iframe
 5. Use \`msg.value\` (not \`msg.fieldValue\`) for the updated value — matches the protocol
 6. The complete listener code is in the template at \`template/src/components/cms-preview-listener.tsx\` — prefer copying it verbatim rather than rewriting it
