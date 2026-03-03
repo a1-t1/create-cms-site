@@ -1,4 +1,4 @@
-# @ctrla/create-cms-site
+# @estation/create-cms-site
 
 MCP server that scaffolds new Next.js sites powered by [eSTATION CMS](https://estation.io).
 
@@ -13,7 +13,7 @@ Add to your `claude_desktop_config.json`:
   "mcpServers": {
     "create-cms-site": {
       "command": "npx",
-      "args": ["-y", "@ctrla/create-cms-site"]
+      "args": ["-y", "@estation/create-cms-site"]
     }
   }
 }
@@ -22,7 +22,7 @@ Add to your `claude_desktop_config.json`:
 ### Claude Code
 
 ```bash
-claude mcp add create-cms-site -- npx -y @ctrla/create-cms-site
+claude mcp add create-cms-site -- npx -y @estation/create-cms-site
 ```
 
 ## Tools
