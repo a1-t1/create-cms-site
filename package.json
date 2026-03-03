@@ -1,0 +1,36 @@
+{
+  "name": "@ctrla/create-cms-site",
+  "version": "1.0.0",
+  "description": "MCP server to scaffold Next.js sites powered by eSTATION CMS",
+  "type": "module",
+  "bin": {
+    "create-cms-site": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "template"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "inspect": "npm run build && npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "cms",
+    "nextjs",
+    "scaffold",
+    "ctrla",
+    "estation"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}
