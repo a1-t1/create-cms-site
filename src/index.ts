@@ -12,10 +12,63 @@ import { listPages, getPage, getPageBySlug, createPage, updatePage, deletePage, 
 import { listCollections, getCollection, createCollection, updateCollection, deleteCollection, executeCollection } from "./tools/collections.js";
 import { searchContent } from "./tools/search.js";
 
-const server = new McpServer({
-  name: "estation-cms",
-  version: "1.1.0",
-});
+const server = new McpServer(
+  {
+    name: "estation-cms",
+    version: "1.2.0",
+  },
+  {
+    instructions: `You are connected to the eSTATION CMS — a headless content management system at cms-gateway.estation.io.
+
+## First-time setup
+
+When the user wants to work with the CMS for the first time, walk them through this flow:
+
+1. **Ask if they have an eSTATION account.** If not, they can sign up at https://cms.estation.io
+2. **Authenticate.** Ask for their email and password, then use the \`login\` tool. This gives full read/write access. Alternatively, if they only need to read public content, ask for their API token (found in CMS dashboard > Settings > API Keys) and use \`set_api_token\`.
+3. **Ask what they want to do:**
+   - **"Build a new website"** → Ask for a project name, where to create it, and their API token. Then use \`scaffold_project\` to create a Next.js site from the template. After scaffolding, offer to install dependencies and explain how to run the dev server.
+   - **"Manage my content"** → Use \`list_pages\` and \`list_blocks\` to show them what they have, then help them create, edit, or publish content.
+   - **"Create content for my site"** → Use \`list_sections\` to understand available section types, then help them create blocks with the right field structure and assemble them into pages.
+
+## How eSTATION CMS works
+
+- **Content blocks** are individual pieces of content (hero banners, FAQ sections, feature grids, etc.). Each block has a type, name, tags, and a \`content\` object with typed fields.
+- **Page compositions** define URL routes (via slug) and contain an ordered list of content block UUIDs. When the website renders a page, it fetches the page by slug and renders each block using the matching section component.
+- **Collections** are saved queries that dynamically group blocks by tags or types.
+- The website template has 10 section components (hero, text, features, faq, testimonials, cta, slider, gallery, contact, generic). Each renders a specific block tag. Use \`list_sections\` to see the exact field schemas.
+
+## Content field structure
+
+Block content fields follow this pattern:
+\`\`\`json
+{
+  "fieldName": {
+    "fieldType": "text",
+    "fieldValue": "The actual value"
+  }
+}
+\`\`\`
+For list fields (like FAQ items or feature cards):
+\`\`\`json
+{
+  "items": {
+    "fieldType": "list",
+    "fieldValue": [
+      { "id": "1", "question": { "fieldType": "text", "fieldValue": "What is...?" }, "answer": { "fieldType": "text", "fieldValue": "It is..." } }
+    ]
+  }
+}
+\`\`\`
+
+## Important notes
+
+- Always authenticate before attempting write operations (create, update, delete, publish).
+- After creating blocks, remember to publish them and add them to a page composition for them to appear on the website.
+- The CMS API URL is hardcoded to https://cms-gateway.estation.io/api/v1 — users don't need to configure it.
+- When scaffolding a new project, the user needs their API token (not email/password). They can find it in the CMS dashboard under Settings > API Keys.`,
+  },
+);
 
 // Helper to wrap tool handlers with error handling
 function wrap(fn: (params: any) => Promise<string> | string) {
