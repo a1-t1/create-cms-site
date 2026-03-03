@@ -1,8 +1,5 @@
-import type { Metadata } from "next";
-import { CMSPreviewListener } from "@/components/cms-preview-listener";
-import { Navigation } from "@/components/Navigation";
-import { Footer } from "@/components/Footer";
 import "@/styles/globals.css";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Website",
@@ -14,14 +11,5 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body className="antialiased">
-        <Navigation />
-        <main>{children}</main>
-        <Footer />
-        <CMSPreviewListener />
-      </body>
-    </html>
-  );
+  return children;
 }

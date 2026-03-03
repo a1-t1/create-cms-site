@@ -15,7 +15,7 @@ import { searchContent } from "./tools/search.js";
 const server = new McpServer(
   {
     name: "estation-cms",
-    version: "1.4.2",
+    version: "1.5.0",
   },
   {
     instructions: `You are connected to the eSTATION CMS — a headless content management system at cms-gateway.estation.io.
@@ -146,11 +146,30 @@ A page's \`blocks\` field is an ordered array of content block UUIDs. The websit
 
 When users say things like "add a hero to my homepage" or "remove the FAQ section", follow these workflows. Always use \`list_sections\` to get the correct field structure for the block type being created.
 
+## Localization (i18n)
+
+The CMS supports per-locale content blocks. Each block has a \`locale\` field (e.g. "en", "ar", "fr"). Supported locales: en, es, fr, de, zh, ja, ko, pt, ar, ku. Arabic and Kurdish use RTL text direction.
+
+**How it works:**
+- When creating a block, set \`locale\` to the target language (defaults to "en" if omitted).
+- To serve content in multiple languages, create separate blocks per locale with the same tags. For example, a hero block tagged \`["hero"]\` in English and another hero block tagged \`["hero"]\` in Arabic.
+- Pages store block UUIDs for ALL locales. When the website requests a page with \`?locale=en\`, only English blocks are returned. Missing locale blocks are simply absent.
+- Use \`list_blocks\` with \`locale\` filter to see blocks for a specific language.
+- The website template uses \`[locale]/\` route segments (e.g. \`/en/about-us\`, \`/ar/about-us\`). The root \`/\` redirects to \`/en\`.
+- RTL locales (ar, ku) automatically set \`dir="rtl"\` on the HTML element.
+
+**Workflow for multi-language content:**
+1. Create blocks in the default language (en) with appropriate tags
+2. For each additional language, create new blocks with the same tags but different \`locale\`
+3. Add all block UUIDs (all locales) to the page's \`blocks\` array
+4. The website filters by locale at request time
+
 ## Page slug conventions
 
 The website template uses these reserved slugs:
-- \`index\` → homepage (rendered by \`/\`)
-- All other slugs render at \`/{slug}\` (e.g. \`about-us\` → \`/about-us\`)
+- \`index\` → homepage (rendered by \`/{locale}\`, e.g. \`/en\`)
+- All other slugs render at \`/{locale}/{slug}\` (e.g. \`about-us\` → \`/en/about-us\`)
+- The root \`/\` redirects to \`/en\` (or the user's preferred locale via Accept-Language)
 
 When a user says "homepage" or "main page", they mean the page with slug \`index\`. When creating a new site, the first page should always have slug \`index\`.
 
@@ -183,6 +202,7 @@ interface ContentBlock {
   type: string;
   name: string;
   tags: string[];        // ARRAY of strings, NOT a comma-separated string
+  locale: string;        // Language code (e.g. "en", "ar", "fr"). Defaults to "en".
   content: Record<string, { fieldType: string; fieldValue: string | ListItem[] }>;
   metadata: Record<string, unknown>;
   version: number;
@@ -301,13 +321,14 @@ server.tool(
 
 server.tool(
   "list_blocks",
-  "List content blocks in the CMS. Filter by tags, search text, or publish status.",
+  "List content blocks in the CMS. Filter by tags, search text, publish status, or locale.",
   {
     page: z.number().optional().describe("Page number (default: 1)"),
     size: z.number().optional().describe("Items per page (default: 10)"),
     search: z.string().optional().describe("Search blocks by name"),
     status: z.enum(["published", "unpublished", "all"]).optional().describe("Filter by publish status"),
     tags: z.string().optional().describe("Comma-separated tags to filter by"),
+    locale: z.string().optional().describe("Filter by locale (e.g. 'en', 'ar', 'fr'). Omit to return all locales."),
   },
   wrap(listBlocks),
 );
@@ -330,6 +351,7 @@ server.tool(
     tags: z.array(z.string()).optional().describe("Tags for categorizing and querying the block"),
     content: z.record(z.unknown()).describe("Block content fields — structure depends on block type. Each field should have { fieldType, fieldValue }"),
     metadata: z.record(z.unknown()).optional().describe("Optional metadata"),
+    locale: z.string().optional().describe("Locale for this block (e.g. 'en', 'ar', 'fr'). Defaults to 'en' if not specified."),
   },
   wrap(createBlock),
 );
@@ -343,6 +365,7 @@ server.tool(
     tags: z.array(z.string()).optional().describe("New tags"),
     content: z.record(z.unknown()).optional().describe("Updated content fields"),
     metadata: z.record(z.unknown()).optional().describe("Updated metadata"),
+    locale: z.string().optional().describe("Change the block's locale (e.g. 'en', 'ar', 'fr')"),
   },
   wrap(({ uuid, ...data }) => updateBlock(uuid, data)),
 );

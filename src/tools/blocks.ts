@@ -28,12 +28,14 @@ export async function listBlocks(params: {
   search?: string;
   status?: string;
   tags?: string;
+  locale?: string;
 }): Promise<string> {
   const query = new URLSearchParams();
   if (params.page) query.set("page", String(params.page));
   if (params.size) query.set("size", String(params.size));
   if (params.search) query.set("search", params.search);
   if (params.status) query.set("status", params.status);
+  if (params.locale) query.set("locale", params.locale);
 
   let path = "/content/blocks";
   if (params.tags) {
@@ -69,6 +71,7 @@ export async function createBlock(data: {
   tags?: string[];
   content: Record<string, unknown>;
   metadata?: Record<string, unknown>;
+  locale?: string;
 }): Promise<string> {
   const block = await cmsRequest<ContentBlock>("POST", "/content/blocks", data);
   return `Block created successfully.\nUUID: ${block.uuid}\nName: ${block.name}\nType: ${block.type}`;
@@ -81,6 +84,7 @@ export async function updateBlock(
     tags?: string[];
     content?: Record<string, unknown>;
     metadata?: Record<string, unknown>;
+    locale?: string;
   },
 ): Promise<string> {
   const block = await cmsRequest<ContentBlock>("PUT", `/content/blocks/${uuid}`, data);

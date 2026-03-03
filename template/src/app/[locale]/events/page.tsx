@@ -3,15 +3,20 @@ import { str } from "@/lib/types";
 import { formatDate } from "@/lib/content-helpers";
 import type { Metadata } from "next";
 
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
+
 export const metadata: Metadata = {
   title: "Events",
   description: "Upcoming events",
 };
 
-export default async function EventsListingPage() {
+export default async function EventsListingPage({ params }: PageProps) {
+  const { locale } = await params;
   let blocks: Awaited<ReturnType<typeof getBlocksByTags>> = [];
   try {
-    blocks = await getBlocksByTags(["events"]);
+    blocks = await getBlocksByTags(["events"], locale);
   } catch {
     // CMS unavailable
   }
@@ -42,7 +47,7 @@ export default async function EventsListingPage() {
                 <article key={block.uuid} className="border-b pb-8">
                   <h2 className="text-2xl font-semibold">
                     {slug ? (
-                      <a href={`/events/${slug}`} className="hover:underline">
+                      <a href={`/${locale}/events/${slug}`} className="hover:underline">
                         {title}
                       </a>
                     ) : (

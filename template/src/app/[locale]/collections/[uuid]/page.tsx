@@ -3,7 +3,7 @@ import { SectionRenderer } from "@/components/SectionRenderer";
 import type { Metadata } from "next";
 
 interface PageProps {
-  params: Promise<{ uuid: string }>;
+  params: Promise<{ locale: string; uuid: string }>;
 }
 
 export const metadata: Metadata = {
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function CollectionPage({ params }: PageProps) {
-  const { uuid } = await params;
-  const blocks = await executeCollection(uuid);
+  const { locale, uuid } = await params;
+  const blocks = await executeCollection(uuid, locale);
 
   return (
     <div className="py-16 px-6">

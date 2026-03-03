@@ -3,15 +3,20 @@ import { str } from "@/lib/types";
 import { formatDate } from "@/lib/content-helpers";
 import type { Metadata } from "next";
 
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
+
 export const metadata: Metadata = {
-  title: "News",
-  description: "Latest news",
+  title: "Blog",
+  description: "Latest blog posts",
 };
 
-export default async function NewsListingPage() {
+export default async function BlogListingPage({ params }: PageProps) {
+  const { locale } = await params;
   let blocks: Awaited<ReturnType<typeof getBlocksByTags>> = [];
   try {
-    blocks = await getBlocksByTags(["news"]);
+    blocks = await getBlocksByTags(["blogs"], locale);
   } catch {
     // CMS unavailable
   }
@@ -25,37 +30,37 @@ export default async function NewsListingPage() {
   return (
     <div className="py-16 px-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-10">News</h1>
+        <h1 className="text-4xl font-bold mb-10">Blog</h1>
         {sorted.length === 0 ? (
-          <p className="text-gray-500">No news articles yet.</p>
+          <p className="text-gray-500">No blog posts yet.</p>
         ) : (
           <div className="space-y-8">
             {sorted.map((block) => {
               const slug = str(block.content.slug);
               const title = str(block.content.title, block.name);
               const excerpt = str(block.content.excerpt);
-              const category = str(block.content.category);
+              const featuredImage = str(block.content.featuredImage);
               const date = str(block.content.publishDate) || block.created_at;
 
               return (
                 <article key={block.uuid} className="border-b pb-8">
-                  <div className="flex items-center gap-3 mb-2">
-                    {category && (
-                      <span className="text-xs font-medium uppercase tracking-wide text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                        {category}
-                      </span>
-                    )}
-                    <span className="text-sm text-gray-500">{formatDate(date)}</span>
-                  </div>
+                  {featuredImage && (
+                    <img
+                      src={featuredImage}
+                      alt={title}
+                      className="w-full h-48 object-cover rounded-lg mb-4"
+                    />
+                  )}
                   <h2 className="text-2xl font-semibold">
                     {slug ? (
-                      <a href={`/news/${slug}`} className="hover:underline">
+                      <a href={`/${locale}/blog/${slug}`} className="hover:underline">
                         {title}
                       </a>
                     ) : (
                       title
                     )}
                   </h2>
+                  <p className="text-sm text-gray-500 mt-1">{formatDate(date)}</p>
                   {excerpt && <p className="text-gray-600 mt-2">{excerpt}</p>}
                 </article>
               );

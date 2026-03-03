@@ -4,13 +4,13 @@ import type { ContentBlock } from "@/lib/types";
 import type { Metadata } from "next";
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { locale, slug } = await params;
   try {
-    const data = await getPageBySlug(slug);
+    const data = await getPageBySlug(slug, locale);
     return {
       title: data.page.title || slug,
       description: data.page.description || undefined,
@@ -21,8 +21,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function DynamicPage({ params }: PageProps) {
-  const { slug } = await params;
-  const data = await getPageBySlug(slug);
+  const { locale, slug } = await params;
+  const data = await getPageBySlug(slug, locale);
   const orderedBlocks = getOrderedBlocks(data.page.blocks, data.blocks);
 
   return <SectionRenderer blocks={orderedBlocks} />;

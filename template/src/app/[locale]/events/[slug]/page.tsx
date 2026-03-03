@@ -5,12 +5,12 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ locale: string; slug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const blocks = await getBlocksByTags(["events"]);
+  const { locale, slug } = await params;
+  const blocks = await getBlocksByTags(["events"], locale);
   const block = findBlockBySlug(blocks, slug);
   if (!block) return { title: "Event Not Found" };
   return {
@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function EventDetailPage({ params }: PageProps) {
-  const { slug } = await params;
-  const blocks = await getBlocksByTags(["events"]);
+  const { locale, slug } = await params;
+  const blocks = await getBlocksByTags(["events"], locale);
   const block = findBlockBySlug(blocks, slug);
 
   if (!block) notFound();
@@ -37,7 +37,7 @@ export default async function EventDetailPage({ params }: PageProps) {
   return (
     <article className="py-16 px-6">
       <div className="max-w-3xl mx-auto">
-        <a href="/events" className="text-sm text-gray-500 hover:underline">&larr; Back to Events</a>
+        <a href={`/${locale}/events`} className="text-sm text-gray-500 hover:underline">&larr; Back to Events</a>
         <h1 className="text-4xl font-bold mt-4 mb-4">{title}</h1>
         <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-8">
           {startDate && (

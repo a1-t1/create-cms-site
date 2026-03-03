@@ -36,12 +36,39 @@ export interface ContentBlock {
   type: string;
   name: string;
   tags: string[];
+  locale: string;
   content: Record<string, ContentField>;
   metadata: Record<string, unknown>;
   version: number;
   is_published: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export const SUPPORTED_LOCALES = [
+  { code: "en", label: "English", dir: "ltr" },
+  { code: "es", label: "Spanish", dir: "ltr" },
+  { code: "fr", label: "French", dir: "ltr" },
+  { code: "de", label: "German", dir: "ltr" },
+  { code: "zh", label: "Chinese", dir: "ltr" },
+  { code: "ja", label: "Japanese", dir: "ltr" },
+  { code: "ko", label: "Korean", dir: "ltr" },
+  { code: "pt", label: "Portuguese", dir: "ltr" },
+  { code: "ar", label: "Arabic", dir: "rtl" },
+  { code: "ku", label: "Kurdish", dir: "rtl" },
+] as const;
+
+export type LocaleCode = (typeof SUPPORTED_LOCALES)[number]["code"];
+
+export const LOCALE_CODES = SUPPORTED_LOCALES.map((l) => l.code) as string[];
+
+export function isValidLocale(s: string): s is LocaleCode {
+  return LOCALE_CODES.includes(s);
+}
+
+export function getLocaleDir(locale: string): "ltr" | "rtl" {
+  const found = SUPPORTED_LOCALES.find((l) => l.code === locale);
+  return found?.dir === "rtl" ? "rtl" : "ltr";
 }
 
 export interface PageComposition {

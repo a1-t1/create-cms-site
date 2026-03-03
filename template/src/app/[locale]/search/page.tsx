@@ -8,16 +8,18 @@ export const metadata: Metadata = {
 };
 
 interface SearchPageProps {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ q?: string; type?: string; page?: string }>;
 }
 
-export default async function SearchPage({ searchParams }: SearchPageProps) {
+export default async function SearchPage({ params, searchParams }: SearchPageProps) {
+  const { locale } = await params;
   const { q, type, page: pageStr } = await searchParams;
   const query = q || "";
   const currentPage = Math.max(1, parseInt(pageStr || "1", 10));
 
   const results = query
-    ? await searchContent(query, type, currentPage, 20)
+    ? await searchContent(query, type, currentPage, 20, locale)
     : null;
 
   return (
@@ -25,7 +27,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Search</h1>
 
-        <form method="get" action="/search" className="flex gap-2 mb-10">
+        <form method="get" action={`/${locale}/search`} className="flex gap-2 mb-10">
           <input
             type="text"
             name="q"
@@ -60,7 +62,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         </span>
                         <h2 className="text-xl font-semibold mt-1">
                           <a
-                            href={item.page.slug === "index" ? "/" : `/${item.page.slug}`}
+                            href={item.page.slug === "index" ? `/${locale}` : `/${locale}/${item.page.slug}`}
                             className="hover:underline"
                           >
                             {item.page.title}
@@ -79,9 +81,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     const tag = item.block.tags?.[0] || "";
                     let href = "#";
                     if (slug) {
-                      if (tag === "blogs") href = `/blog/${slug}`;
-                      else if (tag === "news") href = `/news/${slug}`;
-                      else if (tag === "events") href = `/events/${slug}`;
+                      if (tag === "blogs") href = `/${locale}/blog/${slug}`;
+                      else if (tag === "news") href = `/${locale}/news/${slug}`;
+                      else if (tag === "events") href = `/${locale}/events/${slug}`;
                     }
 
                     return (
@@ -109,7 +111,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               <div className="flex justify-center gap-2 mt-10">
                 {currentPage > 1 && (
                   <a
-                    href={`/search?q=${encodeURIComponent(query)}&page=${currentPage - 1}${type ? `&type=${type}` : ""}`}
+                    href={`/${locale}/search?q=${encodeURIComponent(query)}&page=${currentPage - 1}${type ? `&type=${type}` : ""}`}
                     className="px-4 py-2 border rounded-lg hover:bg-gray-100"
                   >
                     Previous
@@ -120,7 +122,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </span>
                 {currentPage < results.total_pages && (
                   <a
-                    href={`/search?q=${encodeURIComponent(query)}&page=${currentPage + 1}${type ? `&type=${type}` : ""}`}
+                    href={`/${locale}/search?q=${encodeURIComponent(query)}&page=${currentPage + 1}${type ? `&type=${type}` : ""}`}
                     className="px-4 py-2 border rounded-lg hover:bg-gray-100"
                   >
                     Next

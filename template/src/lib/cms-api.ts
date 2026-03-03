@@ -40,17 +40,19 @@ async function cmsFetch<T>(path: string, tags?: string[]): Promise<T> {
   return json.data;
 }
 
-export async function getPageBySlug(slug: string): Promise<PageWithBlocksResponse> {
+export async function getPageBySlug(slug: string, locale?: string): Promise<PageWithBlocksResponse> {
+  const localeParam = locale ? `?locale=${encodeURIComponent(locale)}` : "";
   return cmsFetch<PageWithBlocksResponse>(
-    `/public/content/pages/slug/${encodeURIComponent(slug)}`,
+    `/public/content/pages/slug/${encodeURIComponent(slug)}${localeParam}`,
     [`page-${slug}`]
   );
 }
 
-export async function getBlocksByTags(tags: string[]): Promise<ContentBlock[]> {
+export async function getBlocksByTags(tags: string[], locale?: string): Promise<ContentBlock[]> {
   const query = tags.map(encodeURIComponent).join(",");
+  const localeParam = locale ? `&locale=${encodeURIComponent(locale)}` : "";
   return cmsFetch<ContentBlock[]>(
-    `/public/content/blocks/by-tags?tags=${query}`,
+    `/public/content/blocks/by-tags?tags=${query}${localeParam}`,
     tags.map((t) => `tag-${t}`)
   );
 }
@@ -58,10 +60,12 @@ export async function getBlocksByTags(tags: string[]): Promise<ContentBlock[]> {
 export async function getBlocksByTagPaginated(
   tag: string,
   page = 1,
-  size = 20
+  size = 20,
+  locale?: string
 ): Promise<PaginatedResponse<ContentBlock>> {
+  const localeParam = locale ? `&locale=${encodeURIComponent(locale)}` : "";
   return cmsFetch<PaginatedResponse<ContentBlock>>(
-    `/public/content/blocks/by-tags?tags=${encodeURIComponent(tag)}&page=${page}&size=${size}`,
+    `/public/content/blocks/by-tags?tags=${encodeURIComponent(tag)}&page=${page}&size=${size}${localeParam}`,
     [`tag-${tag}`]
   );
 }
@@ -77,9 +81,10 @@ export async function getAllPages(): Promise<PageComposition[]> {
   return cmsFetch<PageComposition[]>("/public/content/pages", ["all-pages"]);
 }
 
-export async function executeCollection(uuid: string): Promise<ContentBlock[]> {
+export async function executeCollection(uuid: string, locale?: string): Promise<ContentBlock[]> {
+  const localeParam = locale ? `?locale=${encodeURIComponent(locale)}` : "";
   return cmsFetch<ContentBlock[]>(
-    `/public/content/collections/${encodeURIComponent(uuid)}/execute`,
+    `/public/content/collections/${encodeURIComponent(uuid)}/execute${localeParam}`,
     [`collection-${uuid}`]
   );
 }
@@ -92,10 +97,12 @@ export async function searchContent(
   query: string,
   type?: string,
   page = 1,
-  size = 20
+  size = 20,
+  locale?: string
 ): Promise<PaginatedResponse<SearchResultItem>> {
   const params = new URLSearchParams({ q: query, page: String(page), size: String(size) });
   if (type) params.set("type", type);
+  if (locale) params.set("locale", locale);
   return cmsFetch<PaginatedResponse<SearchResultItem>>(
     `/public/content/search?${params.toString()}`,
     ["search"]
