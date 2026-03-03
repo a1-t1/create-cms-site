@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
+const CMS_API_URL = "https://cms-gateway.estation.io/api/v1";
+
 interface ValidationResult {
   valid: boolean;
   errors: string[];
@@ -39,7 +41,7 @@ export async function validateConfig(projectPath: string): Promise<ValidationRes
   }
 
   // Check required vars
-  const required = ["CMS_API_URL", "CMS_API_TOKEN", "REVALIDATE_SECRET"];
+  const required = ["CMS_API_TOKEN", "REVALIDATE_SECRET"];
   for (const key of required) {
     if (!env[key]) {
       errors.push(`Missing required environment variable: ${key}`);
@@ -51,11 +53,11 @@ export async function validateConfig(projectPath: string): Promise<ValidationRes
   }
 
   // Test CMS API connectivity
-  if (env["CMS_API_URL"] && env["CMS_API_TOKEN"]) {
+  if (env["CMS_API_TOKEN"]) {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
-      const res = await fetch(`${env["CMS_API_URL"]}/public/content/pages`, {
+      const res = await fetch(`${CMS_API_URL}/public/content/pages`, {
         headers: { "X-API-TOKEN": env["CMS_API_TOKEN"] },
         signal: controller.signal,
       });
@@ -75,7 +77,7 @@ export async function validateConfig(projectPath: string): Promise<ValidationRes
     errors,
     warnings,
     env: {
-      CMS_API_URL: env["CMS_API_URL"] || "",
+      CMS_API_URL,
       NEXT_PUBLIC_SITE_URL: env["NEXT_PUBLIC_SITE_URL"] || "",
     },
   };

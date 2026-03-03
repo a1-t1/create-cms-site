@@ -11,7 +11,6 @@ const TEMPLATE_DIR = join(__dirname, "..", "..", "template");
 export interface ScaffoldOptions {
   project_name: string;
   destination: string;
-  cms_api_url: string;
   cms_api_token: string;
   site_url?: string;
   site_name?: string;
@@ -22,7 +21,6 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<string>
   const {
     project_name,
     destination,
-    cms_api_url,
     cms_api_token,
     site_url,
     site_name,
@@ -65,7 +63,6 @@ export async function scaffoldProject(options: ScaffoldOptions): Promise<string>
   const revalidateSecret = generateSecret();
   const envContent = [
     "# CMS API",
-    `CMS_API_URL=${cms_api_url}`,
     `CMS_API_TOKEN=${cms_api_token}`,
     "",
     "# On-demand ISR revalidation",

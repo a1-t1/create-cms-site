@@ -7,7 +7,7 @@ import type {
   SearchResultItem,
 } from "./types";
 
-const CMS_API_URL = process.env.CMS_API_URL || "";
+const CMS_API_URL = "https://cms-gateway.estation.io/api/v1";
 const CMS_API_TOKEN = process.env.CMS_API_TOKEN || "";
 
 interface ApiResponse<T> {
