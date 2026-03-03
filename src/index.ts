@@ -15,7 +15,7 @@ import { searchContent } from "./tools/search.js";
 const server = new McpServer(
   {
     name: "estation-cms",
-    version: "1.2.0",
+    version: "1.2.1",
   },
   {
     instructions: `You are connected to the eSTATION CMS — a headless content management system at cms-gateway.estation.io.
@@ -60,6 +60,28 @@ For list fields (like FAQ items or feature cards):
   }
 }
 \`\`\`
+
+## Live preview
+
+The website template includes a built-in live preview system. When the CMS admin embeds the site in an iframe, content editors see changes instantly as they type — no page reload needed.
+
+This works via \`postMessage\` between the CMS admin and the website's \`CMSPreviewListener\` component (already in the root layout). The system uses two HTML data attributes:
+- \`data-cms-block="{tag}"\` on the wrapping \`<section>\` (added automatically by SectionRenderer)
+- \`data-cms-field="{fieldName}"\` on each element that displays a CMS field value
+
+**When helping users create custom section components**, always add \`data-cms-field\` attributes to every element that renders a CMS field. This ensures live preview works automatically. Example:
+\`\`\`tsx
+<h2 data-cms-field="title">{str(c.title)}</h2>
+<p data-cms-field="description">{str(c.description)}</p>
+<div data-cms-field="body" dangerouslySetInnerHTML={{ __html: str(c.body) }} />
+<img data-cms-field="heroImage" src={str(c.heroImage)} alt="" />
+\`\`\`
+
+Field type rules for live preview:
+- \`text\` → use on any element (\`<h1>\`, \`<p>\`, \`<span>\`), updated via \`textContent\`
+- \`richtext\` → use \`dangerouslySetInnerHTML\`, updated via \`innerHTML\`
+- \`image\` → must be on an \`<img>\` element, updated via \`.src\`
+- \`list\` → wrap items in a container element, updated by replacing inner HTML
 
 ## Important notes
 
