@@ -15,7 +15,7 @@ import { searchContent } from "./tools/search.js";
 const server = new McpServer(
   {
     name: "estation-cms",
-    version: "1.3.0",
+    version: "1.4.0",
   },
   {
     instructions: `You are connected to the eSTATION CMS — a headless content management system at cms-gateway.estation.io.
@@ -65,6 +65,32 @@ For list fields (like FAQ items or feature cards):
 
 The website template includes a built-in live preview system. When the CMS admin embeds the site in an iframe, content editors see changes instantly as they type — no page reload needed.
 
+### Prerequisites for live preview to work
+
+All three of these must be true, or preview features (highlight, scroll, auto-update) will silently fail:
+
+1. **\`website_url\` must be configured in CMS Settings.** Go to CMS Dashboard → Settings → Site Settings and set the Website URL (e.g. \`http://localhost:3000\` for local dev, or the production URL). Without this, the admin renders a structured preview instead of an iframe — no postMessage is ever sent.
+2. **The website must be running.** The iframe loads from the \`website_url\`, so the dev server (\`npm run dev\`) or production server must be up.
+3. **Block tags must match.** The CMS admin sends postMessage for **all tags** on a block. The website's \`data-cms-block\` attribute value must match **any one** of the block's tags. For example, if a block has tags \`["home", "hero"]\`, the admin sends messages for both — the website can use \`data-cms-block="hero"\` and it will work. When creating blocks, use a descriptive section tag (e.g. \`"hero"\`, \`"services"\`) that matches the \`data-cms-block\` attribute, plus optional grouping tags (e.g. \`"home"\`).
+
+### Iframe embedding headers
+
+The website's \`next.config\` must allow iframe embedding from the CMS domain. Add these headers so browsers don't block the iframe:
+\`\`\`js
+async headers() {
+  return [{
+    source: '/:path*',
+    headers: [
+      { key: 'X-Frame-Options', value: 'ALLOWALL' },
+      { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
+    ],
+  }];
+}
+\`\`\`
+The scaffolded template includes this by default. When migrating an existing site, you MUST add these headers to \`next.config\`.
+
+### How it works
+
 This works via \`postMessage\` between the CMS admin and the website's \`CMSPreviewListener\` component (already in the root layout). The system uses two HTML data attributes:
 - \`data-cms-block="{tag}"\` on the wrapping \`<section>\` (added automatically by SectionRenderer)
 - \`data-cms-field="{fieldName}"\` on each element that displays a CMS field value
@@ -82,6 +108,16 @@ Field type rules for live preview:
 - \`richtext\` → use \`dangerouslySetInnerHTML\`, updated via \`innerHTML\`
 - \`image\` → must be on an \`<img>\` element, updated via \`.src\`
 - \`list\` → wrap items in a container element, updated by replacing inner HTML
+
+### Troubleshooting live preview
+
+If preview doesn't work (no highlight, no scroll, no auto-update):
+1. Check that \`website_url\` is set in CMS Dashboard → Settings → Site Settings
+2. Check that the website is running at that URL
+3. Check that \`data-cms-block\` values match at least one of the block's tags — e.g. if the website has \`data-cms-block="hero"\`, the CMS block must have \`"hero"\` somewhere in its tags array
+4. Check that \`CMSPreviewListener\` is rendered in the root layout (it's a client component)
+5. Check browser console for cross-origin or iframe-related errors
+6. Ensure the website's \`next.config\` has iframe-allowing headers (\`frame-ancestors *\`)
 
 ## Adding, removing, and reordering sections on a page
 
@@ -187,6 +223,22 @@ REVALIDATE_SECRET=generated-secret
 NEXT_PUBLIC_SITE_URL=https://your-site.com
 \`\`\`
 Do NOT add \`CMS_API_URL\` — it is hardcoded in the code.
+
+## Migrating an existing site to eSTATION CMS
+
+When a user wants to integrate CMS into an existing Next.js site (not scaffolded from the template), follow these steps:
+
+1. **Copy reference files verbatim** from the template — do NOT rewrite from scratch:
+   - \`template/src/lib/cms-api.ts\` → the canonical CMS client (auth header, API paths, response unwrapping, types)
+   - \`template/src/components/cms-preview-listener.tsx\` → the canonical preview listener
+   - \`template/src/lib/types.ts\` → shared types and helpers (\`str()\`, \`list()\`, \`ContentField\`, \`ContentBlock\`, etc.)
+2. **Add iframe headers** to \`next.config\` (see Live Preview section above)
+3. **Add \`CMSPreviewListener\`** to the root layout (must be a client component)
+4. **Add \`data-cms-block\` and \`data-cms-field\` attributes** to every component that renders CMS content
+5. **Set up \`.env.local\`** with \`CMS_API_TOKEN\`, \`REVALIDATE_SECRET\`, and \`NEXT_PUBLIC_SITE_URL\`
+6. **Remind the user** to set \`website_url\` in CMS Dashboard → Settings → Site Settings
+
+The template's \`cms-api.ts\` uses helper functions \`fieldText()\`, \`fieldList()\`, and \`itemText()\` to safely extract values from CMS content fields. Always use these instead of accessing \`block.content.fieldName.fieldValue\` directly.
 
 ## Other notes
 
