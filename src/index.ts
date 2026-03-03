@@ -15,7 +15,7 @@ import { searchContent } from "./tools/search.js";
 const server = new McpServer(
   {
     name: "estation-cms",
-    version: "1.2.3",
+    version: "1.3.0",
   },
   {
     instructions: `You are connected to the eSTATION CMS — a headless content management system at cms-gateway.estation.io.
@@ -112,11 +112,86 @@ The website template uses these reserved slugs:
 
 When a user says "homepage" or "main page", they mean the page with slug \`index\`. When creating a new site, the first page should always have slug \`index\`.
 
-## Important notes
+## CRITICAL: CMS API integration rules
+
+When helping users write code that calls the CMS API (e.g. migrating an existing site), you MUST follow these rules exactly. Getting any of them wrong will break the integration.
+
+### Authentication
+- **Public endpoints** use the \`X-API-TOKEN\` header (NOT \`Authorization: Bearer\`). Bearer tokens are only for JWT login sessions.
+- The env var MUST be named \`CMS_API_TOKEN\` (not \`ESTATION_API_TOKEN\` or anything else).
+- Example: \`headers: { "X-API-TOKEN": process.env.CMS_API_TOKEN }\`
+
+### API paths
+All public content endpoints are under \`/public/content/\`. Never omit this prefix.
+- Pages by slug: \`GET /public/content/pages/slug/{slug}\` — returns \`{ page, blocks }\`
+- Blocks by tags: \`GET /public/content/blocks/by-tags?tags={comma-separated}\`
+- Single block: \`GET /public/content/blocks/{uuid}\`
+- All pages: \`GET /public/content/pages\`
+- Collections: \`GET /public/content/collections/{uuid}/blocks\`
+- Search: \`GET /public/content/search?q={query}\`
+
+### Response format
+All API responses are wrapped: \`{ status: string, message: string, data: T }\`. You must unwrap: \`const json = await res.json(); return json.data;\`
+
+### Data model — blocks
+\`\`\`typescript
+interface ContentBlock {
+  uuid: string;
+  tenant_uuid: string;
+  type: string;
+  name: string;
+  tags: string[];        // ARRAY of strings, NOT a comma-separated string
+  content: Record<string, { fieldType: string; fieldValue: string | ListItem[] }>;
+  metadata: Record<string, unknown>;
+  version: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+\`\`\`
+
+### Data model — pages
+The page-with-blocks endpoint returns:
+\`\`\`typescript
+interface PageWithBlocks {
+  page: {
+    uuid: string;
+    slug: string;
+    title: string;
+    description: string;
+    blocks: string[];    // Array of block UUIDs (NOT block objects)
+    layout: string;
+    tags: string[];
+    is_published: boolean;
+  };
+  blocks: Record<string, ContentBlock>;  // Map of UUID → block
+}
+\`\`\`
+To render blocks in order: \`page.blocks.map(uuid => blocks[uuid]).filter(Boolean)\`
+
+### Finding blocks by tag
+Tags is an array: \`block.tags.includes("hero")\`, NOT \`block.tag.split(",").includes("hero")\`.
+
+### CMSPreviewListener
+When creating a preview listener component, it MUST:
+1. Check \`msg.type === "cms-preview-update"\` before processing (other postMessages exist)
+2. Handle \`cms-preview-highlight\` messages for field focus/blur visual feedback
+3. Use \`msg.value\` (not \`msg.fieldValue\`) for the updated value — matches the protocol
+4. The complete listener code is in the template at \`template/src/components/cms-preview-listener.tsx\` — prefer copying it verbatim rather than rewriting it
+
+### .env.local
+Only these vars are needed:
+\`\`\`
+CMS_API_TOKEN=your-token-here
+REVALIDATE_SECRET=generated-secret
+NEXT_PUBLIC_SITE_URL=https://your-site.com
+\`\`\`
+Do NOT add \`CMS_API_URL\` — it is hardcoded in the code.
+
+## Other notes
 
 - Always authenticate before attempting write operations (create, update, delete, publish).
 - After creating blocks, remember to publish them and add them to a page composition for them to appear on the website.
-- The CMS API URL is hardcoded to https://cms-gateway.estation.io/api/v1 — users don't need to configure it.
 - When scaffolding a new project, the user needs their API token (not email/password). They can find it in the CMS dashboard under Settings > API Keys.`,
   },
 );
