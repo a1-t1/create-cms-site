@@ -20,6 +20,8 @@ interface PreviewHighlightMessage {
 
 type CMSMessage = PreviewUpdateMessage | PreviewHighlightMessage;
 
+const isInIframe = typeof window !== "undefined" && window !== window.parent;
+
 const HIGHLIGHT_CLASS = "cms-preview-highlight";
 const HIGHLIGHT_STYLE_ID = "cms-preview-highlight-style";
 
@@ -33,6 +35,16 @@ function ensureHighlightStyles() {
       outline-offset: 2px;
       transition: outline 0.15s ease;
     }
+    ${isInIframe ? `
+    [data-cms-field] {
+      cursor: pointer;
+      transition: outline 0.15s ease;
+    }
+    [data-cms-field]:hover {
+      outline: 1px dashed #3b82f6 !important;
+      outline-offset: 2px;
+    }
+    ` : ""}
   `;
   document.head.appendChild(style);
 }
@@ -104,10 +116,38 @@ function handleMessage(event: MessageEvent) {
   }
 }
 
+function handleClick(event: MouseEvent) {
+  if (!isInIframe) return;
+  const target = event.target as Element;
+  // Walk up to find nearest data-cms-field
+  const fieldEl = target.closest("[data-cms-field]");
+  if (!fieldEl) return;
+  const blockEl = fieldEl.closest("[data-cms-block]");
+  if (!blockEl) return;
+
+  const fieldName = fieldEl.getAttribute("data-cms-field");
+  const blockTag = blockEl.getAttribute("data-cms-block");
+  if (!fieldName || !blockTag) return;
+
+  window.parent.postMessage(
+    { type: "cms-preview-element-click", blockTag, fieldName },
+    "*"
+  );
+}
+
 export function CMSPreviewListener() {
   useEffect(() => {
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    if (isInIframe) {
+      ensureHighlightStyles();
+      document.addEventListener("click", handleClick);
+    }
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      if (isInIframe) {
+        document.removeEventListener("click", handleClick);
+      }
+    };
   }, []);
 
   return null;

@@ -15,7 +15,7 @@ import { searchContent } from "./tools/search.js";
 const server = new McpServer(
   {
     name: "estation-cms",
-    version: "1.4.0",
+    version: "1.4.1",
   },
   {
     instructions: `You are connected to the eSTATION CMS — a headless content management system at cms-gateway.estation.io.
@@ -91,11 +91,17 @@ The scaffolded template includes this by default. When migrating an existing sit
 
 ### How it works
 
-This works via \`postMessage\` between the CMS admin and the website's \`CMSPreviewListener\` component (already in the root layout). The system uses two HTML data attributes:
+This works via \`postMessage\` between the CMS admin and the website's \`CMSPreviewListener\` component (already in the root layout). The system is **two-way**:
+
+**Admin → Website (one-way updates):**
+The CMS admin sends \`cms-preview-update\` and \`cms-preview-highlight\` messages to the iframe. The website uses two HTML data attributes to receive them:
 - \`data-cms-block="{tag}"\` on the wrapping \`<section>\` (added automatically by SectionRenderer)
 - \`data-cms-field="{fieldName}"\` on each element that displays a CMS field value
 
-**When helping users create custom section components**, always add \`data-cms-field\` attributes to every element that renders a CMS field. This ensures live preview works automatically. Example:
+**Website → Admin (click-to-edit):**
+When the website is inside an iframe, clicking any \`[data-cms-field]\` element sends a \`cms-preview-element-click\` message back to the parent. The CMS admin receives this and automatically expands the corresponding block, scrolls to the field, and flash-highlights it. Hovering over \`[data-cms-field]\` elements shows a dashed blue outline (only when in iframe, not on the live site).
+
+**When helping users create custom section components**, always add \`data-cms-field\` attributes to every element that renders a CMS field. This ensures both live preview AND click-to-edit work automatically. Example:
 \`\`\`tsx
 <h2 data-cms-field="title">{str(c.title)}</h2>
 <p data-cms-field="description">{str(c.description)}</p>
@@ -212,8 +218,10 @@ Tags is an array: \`block.tags.includes("hero")\`, NOT \`block.tag.split(",").in
 When creating a preview listener component, it MUST:
 1. Check \`msg.type === "cms-preview-update"\` before processing (other postMessages exist)
 2. Handle \`cms-preview-highlight\` messages for field focus/blur visual feedback
-3. Use \`msg.value\` (not \`msg.fieldValue\`) for the updated value — matches the protocol
-4. The complete listener code is in the template at \`template/src/components/cms-preview-listener.tsx\` — prefer copying it verbatim rather than rewriting it
+3. Handle click-to-edit: when inside an iframe, delegate clicks on \`[data-cms-field]\` elements and send \`cms-preview-element-click\` messages to \`window.parent\` with \`{ blockTag, fieldName }\`
+4. Add hover styles (\`outline: 1px dashed\`) on \`[data-cms-field]\` elements — only when inside an iframe
+5. Use \`msg.value\` (not \`msg.fieldValue\`) for the updated value — matches the protocol
+6. The complete listener code is in the template at \`template/src/components/cms-preview-listener.tsx\` — prefer copying it verbatim rather than rewriting it
 
 ### .env.local
 Only these vars are needed:
