@@ -15,7 +15,7 @@ import { searchContent } from "./tools/search.js";
 const server = new McpServer(
   {
     name: "estation-cms",
-    version: "1.2.2",
+    version: "1.2.3",
   },
   {
     instructions: `You are connected to the eSTATION CMS — a headless content management system at cms-gateway.estation.io.
@@ -103,6 +103,14 @@ A page's \`blocks\` field is an ordered array of content block UUIDs. The websit
 2. \`update_page\` with the blocks array in the desired new order
 
 When users say things like "add a hero to my homepage" or "remove the FAQ section", follow these workflows. Always use \`list_sections\` to get the correct field structure for the block type being created.
+
+## Page slug conventions
+
+The website template uses these reserved slugs:
+- \`index\` → homepage (rendered by \`/\`)
+- All other slugs render at \`/{slug}\` (e.g. \`about-us\` → \`/about-us\`)
+
+When a user says "homepage" or "main page", they mean the page with slug \`index\`. When creating a new site, the first page should always have slug \`index\`.
 
 ## Important notes
 
