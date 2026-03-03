@@ -85,6 +85,12 @@ export interface CMSPreviewHighlightMessage {
   active: boolean;
 }
 
+export interface CMSPreviewElementClickMessage {
+  type: "cms-preview-element-click";
+  blockTag: string;
+  fieldName: string;
+}
+
 export interface PaginatedResponse<T> {
   page: number;
   size: number;
