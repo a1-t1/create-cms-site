@@ -15,7 +15,7 @@ import { searchContent } from "./tools/search.js";
 const server = new McpServer(
   {
     name: "estation-cms",
-    version: "1.2.1",
+    version: "1.2.2",
   },
   {
     instructions: `You are connected to the eSTATION CMS — a headless content management system at cms-gateway.estation.io.
@@ -82,6 +82,27 @@ Field type rules for live preview:
 - \`richtext\` → use \`dangerouslySetInnerHTML\`, updated via \`innerHTML\`
 - \`image\` → must be on an \`<img>\` element, updated via \`.src\`
 - \`list\` → wrap items in a container element, updated by replacing inner HTML
+
+## Adding, removing, and reordering sections on a page
+
+A page's \`blocks\` field is an ordered array of content block UUIDs. The website renders them in that order. To manage sections on a page:
+
+**Add a section to a page:**
+1. \`create_block\` with the right type, tags, and content fields → returns the new block UUID
+2. \`publish_block\` to make it visible on the website
+3. \`get_page\` to get the current blocks array
+4. \`update_page\` with the new UUID appended to (or inserted at any position in) the blocks array
+
+**Remove a section from a page:**
+1. \`get_page\` to get the current blocks array
+2. \`update_page\` with the blocks array minus the UUID to remove
+3. Optionally \`delete_block\` if the block should be removed from the CMS entirely (not just the page)
+
+**Reorder sections:**
+1. \`get_page\` to get the current blocks array
+2. \`update_page\` with the blocks array in the desired new order
+
+When users say things like "add a hero to my homepage" or "remove the FAQ section", follow these workflows. Always use \`list_sections\` to get the correct field structure for the block type being created.
 
 ## Important notes
 
