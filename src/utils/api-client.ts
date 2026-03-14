@@ -78,6 +78,16 @@ export async function cmsRequest<T>(
   }
 }
 
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (auth.jwt) {
+    headers["Authorization"] = `Bearer ${auth.jwt}`;
+  } else if (auth.apiToken) {
+    headers["X-API-TOKEN"] = auth.apiToken;
+  }
+  return headers;
+}
+
 export async function login(email: string, password: string): Promise<string> {
   const url = `${CMS_BASE_URL}/public/users/login`;
   const res = await fetch(url, {

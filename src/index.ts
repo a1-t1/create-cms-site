@@ -11,6 +11,7 @@ import { listBlocks, getBlock, createBlock, updateBlock, deleteBlock, publishBlo
 import { listPages, getPage, getPageBySlug, createPage, updatePage, deletePage, publishPage, duplicatePage } from "./tools/pages.js";
 import { listCollections, getCollection, createCollection, updateCollection, deleteCollection, executeCollection } from "./tools/collections.js";
 import { searchContent } from "./tools/search.js";
+import { uploadFile, uploadFromUrl } from "./tools/upload.js";
 
 const server = new McpServer(
   {
@@ -629,6 +630,27 @@ server.tool(
     page_size: z.number().optional().describe("Results per page"),
   },
   wrap(searchContent),
+);
+
+// ── File Upload ──────────────────────────────────────────────────────
+
+server.tool(
+  "upload_file",
+  "Upload a local file to the CMS storage (Cloudflare R2). Returns a public URL. Requires authentication.",
+  {
+    file_path: z.string().describe("Absolute path to the file to upload"),
+  },
+  wrap(({ file_path }) => uploadFile(file_path)),
+);
+
+server.tool(
+  "upload_from_url",
+  "Download a file from a URL and upload it to the CMS storage (Cloudflare R2). Returns a public URL. Useful for migrating images from other sources.",
+  {
+    url: z.string().describe("URL of the file to download and upload"),
+    file_name: z.string().optional().describe("Override the filename (e.g. 'logo.svg'). If omitted, extracted from URL."),
+  },
+  wrap(({ url, file_name }) => uploadFromUrl(url, file_name)),
 );
 
 // ── Website Template ────────────────────────────────────────────────
