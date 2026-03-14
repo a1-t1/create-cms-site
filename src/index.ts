@@ -101,6 +101,27 @@ When creating a block, the API returns the full block object:
 
 This pattern works for any content type — blogs, news, events, products, team members, etc. Just change the \`type\` and \`tags\` accordingly.
 
+### CMS admin UI for content types
+
+The CMS admin has dedicated menu items for managing content types:
+- **Blogs** → filtered view of blocks with tag \`"blog"\`
+- **News** → filtered view of blocks with tag \`"news"\`
+- **Events** → filtered view of blocks with tag \`"event"\`
+- **Sliders** → filtered view of blocks with tag \`"slider"\`
+
+These pages provide a user-friendly interface for non-technical users to create, edit, and delete content without needing to understand content blocks. Each page has its own editor with type-specific fields.
+
+The main **Content Blocks** page automatically hides content type blocks (blog, news, event, slider) to avoid clutter — those are managed through their dedicated pages.
+
+### Live preview for content types
+
+When editing a blog post, news article, or event in the CMS admin, users can toggle **Live Preview** to see a split-view: editor on the left, website preview on the right. This requires:
+1. \`website_url\` configured in CMS Settings
+2. The website running with matching routes (e.g. \`/en/blog/{slug}\`, \`/en/news/{slug}\`)
+3. \`data-cms-block\` and \`data-cms-field\` attributes on the content page components
+
+The preview sends real-time field updates via postMessage as the user types, and supports click-to-edit from the preview back to the editor.
+
 ## Content field structure
 
 Block content fields follow this pattern:
