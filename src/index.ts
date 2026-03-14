@@ -70,15 +70,35 @@ Use \`create_block\` with type \`"blog"\` and a tag like \`"blog"\`:
 }
 \`\`\`
 
-Then \`publish_block\` to make it visible via public API.
+Then \`publish_block\` to make it visible via public API. (The CMS admin UI auto-publishes on create, but via the MCP tools you must call \`publish_block\` explicitly.)
+
+### Permissions for content types
+
+Content type blocks (\`blog\`, \`news\`, \`event\`, \`custom\`) have relaxed permissions compared to section blocks (\`hero\`, \`text\`, \`features\`, etc.):
+
+| Operation | Content types (blog, news, event, custom) | Section blocks (hero, text, features...) |
+|-----------|------------------------------------------|------------------------------------------|
+| Create | **user + admin** | admin only |
+| Update | **user + admin** | admin only |
+| Delete | **user + admin** | admin only |
+| Publish | **user + admin** | admin only |
+| Duplicate | **user + admin** | admin only |
+
+This means regular users (non-admin) can fully manage blog posts, news articles, events, etc. without admin privileges. Section blocks that make up the site layout remain admin-only.
+
+### Auto-publish behavior
+
+When content type blocks are created through the CMS admin UI, they are **automatically published** so they appear on the website immediately. Users can unpublish to hide them. Only published blocks are returned by the public API.
+
+When using MCP tools, blocks are created as unpublished by default — call \`publish_block\` after \`create_block\` to make them visible.
 
 ### Fetching content (public API)
 
 - **List all blog posts (paginated):** \`list_blocks\` with \`tags: "blog"\` — returns paginated results
 - **Get a single post:** \`get_block\` with the post's UUID
 - **Public endpoints (for websites):**
-  - \`GET /public/content/blocks/by-tags?tags=blog&page=1&size=10\` — paginated list
-  - \`GET /public/content/blocks/{uuid}\` — single item
+  - \`GET /public/content/blocks/by-tags?tags=blog&page=1&size=10\` — paginated list (only published)
+  - \`GET /public/content/blocks/{uuid}\` — single item (only if published)
 
 ### Response format for create_block
 
