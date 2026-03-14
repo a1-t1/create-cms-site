@@ -63,8 +63,12 @@ export async function cmsRequest<T>(
       throw new Error(`CMS API ${res.status}: ${res.statusText}${text ? ` — ${text}` : ""}`);
     }
 
-    const json: ApiResponse<T> = await res.json();
-    return json.data;
+    const json = await res.json();
+    // Backend may return wrapped { status, message, data } or unwrapped response directly
+    if (json && typeof json === "object" && "data" in json && "status" in json) {
+      return json.data as T;
+    }
+    return json as T;
   } catch (err: any) {
     clearTimeout(timeout);
     if (err.name === "AbortError") {

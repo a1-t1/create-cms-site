@@ -38,6 +38,68 @@ When the user wants to work with the CMS for the first time, walk them through t
 - **Collections** are saved queries that dynamically group blocks by tags or types.
 - The website template has 10 section components (hero, text, features, faq, testimonials, cta, slider, gallery, contact, generic). Each renders a specific block tag. Use \`list_sections\` to see the exact field schemas.
 
+## Content types (Blogs, News, Events, etc.)
+
+The CMS supports dynamic content types using content blocks. Each content item (blog post, news article, event, etc.) is stored as its **own individual content block** — NOT as items in a list field.
+
+### How it works
+
+- Use the block \`type\` field to identify the content type: \`"blog"\`, \`"news"\`, \`"event"\`, etc.
+- Use \`tags\` to categorize and filter: e.g. \`["blog", "tech"]\` or \`["news", "featured"]\`.
+- Each block's \`content\` holds the item's fields using the standard \`{ fieldType, fieldValue }\` structure.
+
+### Creating a blog post
+
+Use \`create_block\` with type \`"blog"\` and a tag like \`"blog"\`:
+\`\`\`json
+{
+  "type": "blog",
+  "name": "My First Blog Post",
+  "tags": ["blog"],
+  "content": {
+    "title": { "fieldType": "text", "fieldValue": "My First Blog Post" },
+    "slug": { "fieldType": "text", "fieldValue": "my-first-blog-post" },
+    "author": { "fieldType": "text", "fieldValue": "John Doe" },
+    "excerpt": { "fieldType": "textarea", "fieldValue": "A short summary..." },
+    "body": { "fieldType": "richtext", "fieldValue": "<p>Full article content...</p>" },
+    "featuredImage": { "fieldType": "image", "fieldValue": "https://..." },
+    "publishDate": { "fieldType": "text", "fieldValue": "2026-03-14" },
+    "status": { "fieldType": "text", "fieldValue": "published" }
+  }
+}
+\`\`\`
+
+Then \`publish_block\` to make it visible via public API.
+
+### Fetching content (public API)
+
+- **List all blog posts (paginated):** \`list_blocks\` with \`tags: "blog"\` — returns paginated results
+- **Get a single post:** \`get_block\` with the post's UUID
+- **Public endpoints (for websites):**
+  - \`GET /public/content/blocks/by-tags?tags=blog&page=1&size=10\` — paginated list
+  - \`GET /public/content/blocks/{uuid}\` — single item
+
+### Response format for create_block
+
+When creating a block, the API returns the full block object:
+\`\`\`json
+{
+  "uuid": "550e8400-...",
+  "tenant_uuid": "123e4567-...",
+  "type": "blog",
+  "name": "My First Blog Post",
+  "tags": ["blog"],
+  "locale": "en",
+  "content": { ... },
+  "version": 1,
+  "is_published": false,
+  "created_at": "2026-03-14T...",
+  "updated_at": "2026-03-14T..."
+}
+\`\`\`
+
+This pattern works for any content type — blogs, news, events, products, team members, etc. Just change the \`type\` and \`tags\` accordingly.
+
 ## Content field structure
 
 Block content fields follow this pattern:
@@ -344,9 +406,9 @@ server.tool(
 
 server.tool(
   "create_block",
-  "Create a new content block in the CMS. Use list_sections to see available block types and their expected fields.",
+  "Create a new content block in the CMS. Use list_sections to see available section types. For content types (blog posts, news articles, events), use the content type as the block type (e.g. type: 'blog') with appropriate tags.",
   {
-    type: z.string().describe("Block type (e.g. hero, text, features, faq, testimonials, cta, slider, gallery, contact, custom)"),
+    type: z.string().describe("Block type — section types: hero, text, features, faq, testimonials, cta, slider, gallery, contact, custom. Content types: blog, news, event, or any custom type."),
     name: z.string().describe("Display name for the block"),
     tags: z.array(z.string()).optional().describe("Tags for categorizing and querying the block"),
     content: z.record(z.unknown()).describe("Block content fields — structure depends on block type. Each field should have { fieldType, fieldValue }"),
