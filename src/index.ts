@@ -216,16 +216,29 @@ The CMS supports per-locale content blocks. Each block has a \`locale\` field (e
 **How it works:**
 - When creating a block, set \`locale\` to the target language (defaults to "en" if omitted).
 - To serve content in multiple languages, create separate blocks per locale with the same tags. For example, a hero block tagged \`["hero"]\` in English and another hero block tagged \`["hero"]\` in Arabic.
-- Pages store block UUIDs for ALL locales. When the website requests a page with \`?locale=en\`, only English blocks are returned. Missing locale blocks are simply absent.
+- Pages store block UUIDs for ALL locales. When the website requests a page with \`?locale=en\`, only English blocks are returned.
+- **Locale fallback:** If a block doesn't exist in the requested locale, the API automatically falls back to the default (non-locale-filtered) version. This means you don't need to translate every block — untranslated blocks will show the default language content.
 - Use \`list_blocks\` with \`locale\` filter to see blocks for a specific language.
-- The website template uses \`[locale]/\` route segments (e.g. \`/en/about-us\`, \`/ar/about-us\`). The root \`/\` redirects to \`/en\`.
-- RTL locales (ar, ku) automatically set \`dir="rtl"\` on the HTML element.
+
+**Website template i18n features:**
+- **Locale routing:** Uses \`[locale]/\` route segments (e.g. \`/en/about-us\`, \`/ar/about-us\`). The root \`/\` auto-redirects based on the browser's \`Accept-Language\` header.
+- **RTL support:** RTL locales (ar, ku) automatically set \`dir="rtl"\` on the \`<html>\` element. Use Tailwind's \`rtl:\` and \`ltr:\` utilities for directional styles (e.g. \`ltr:ml-4 rtl:mr-4\`, \`ltr:text-left rtl:text-right\`).
+- **Language switcher:** The \`LanguageSwitcher\` component (client component) renders locale links that preserve the current page path. It's included in the Navigation by default.
+- **SEO hreflang tags:** The \`HreflangTags\` component automatically adds \`<link rel="alternate" hreflang="..."\` tags for all supported locales, improving multilingual SEO.
 
 **Workflow for multi-language content:**
 1. Create blocks in the default language (en) with appropriate tags
 2. For each additional language, create new blocks with the same tags but different \`locale\`
 3. Add all block UUIDs (all locales) to the page's \`blocks\` array
-4. The website filters by locale at request time
+4. The website filters by locale at request time — missing translations gracefully fall back to the default language
+
+**RTL styling guide:**
+When building components for RTL support, use these Tailwind patterns:
+- Margins/padding: \`ltr:ml-4 rtl:mr-4\` (or use logical properties: \`ms-4\` for margin-inline-start)
+- Text alignment: \`ltr:text-left rtl:text-right\` (or use \`text-start\`/\`text-end\`)
+- Flexbox direction: \`ltr:flex-row rtl:flex-row-reverse\`
+- Border radius: \`ltr:rounded-l-lg rtl:rounded-r-lg\` (or use \`rounded-s-lg\`/\`rounded-e-lg\`)
+- Icons/arrows: flip directional icons with \`rtl:rotate-180\`
 
 ## Page slug conventions
 

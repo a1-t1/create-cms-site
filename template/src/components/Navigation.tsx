@@ -1,6 +1,7 @@
 import { getBlocksByTags, getAllPages } from "@/lib/cms-api";
-import { str, SUPPORTED_LOCALES } from "@/lib/types";
+import { str } from "@/lib/types";
 import type { ListItem } from "@/lib/types";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface NavLink {
   label: string;
@@ -25,7 +26,6 @@ export async function Navigation({ locale = "en" }: NavigationProps) {
         .map((item) => {
           const label = str(item.label as never);
           const rawHref = str(item.href as never, "/");
-          // Prefix hrefs with locale if they start with / and don't already have a locale
           const href = rawHref.startsWith("/") ? `/${locale}${rawHref === "/" ? "" : rawHref}` : rawHref;
           return { label, href };
         })
@@ -70,21 +70,7 @@ export async function Navigation({ locale = "en" }: NavigationProps) {
               ))}
             </ul>
           )}
-          <div className="flex gap-1 text-xs">
-            {SUPPORTED_LOCALES.map((l) => (
-              <a
-                key={l.code}
-                href={`/${l.code}`}
-                className={`px-2 py-1 rounded ${
-                  l.code === locale
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-500 hover:bg-gray-100"
-                }`}
-              >
-                {l.code.toUpperCase()}
-              </a>
-            ))}
-          </div>
+          <LanguageSwitcher locale={locale} />
         </div>
       </div>
     </nav>

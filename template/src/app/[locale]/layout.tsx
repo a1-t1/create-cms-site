@@ -1,6 +1,7 @@
 import { CMSPreviewListener } from "@/components/cms-preview-listener";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { HreflangTags } from "@/components/HreflangTags";
 import { getLocaleDir, isValidLocale } from "@/lib/types";
 import { notFound } from "next/navigation";
 
@@ -23,6 +24,9 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={dir}>
+      <head>
+        <HreflangTags />
+      </head>
       <body className="antialiased">
         <Navigation locale={locale} />
         <main>{children}</main>
